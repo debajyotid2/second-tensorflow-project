@@ -1,6 +1,6 @@
 # Second tensorflow project
 
-Implemented classifer using tensorflow on CIFAR10 dataset.
+Implemented CNN classifer using tensorflow on CIFAR10 dataset.
 
 ## Future work
 
