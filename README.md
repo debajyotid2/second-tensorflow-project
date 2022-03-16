@@ -1,6 +1,6 @@
 # Second tensorflow project
 
-Second tensorflow project will be on convolutional neural networks.
+Implemented classifer using tensorflow on CIFAR10 dataset.
 
 ## Future work
 
