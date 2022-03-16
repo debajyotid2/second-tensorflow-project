@@ -1,8 +1,12 @@
-# code to handle tensorflow GPU errors
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+
+# code to handle tensorflow GPU errors
+
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
     # Restrict TensorFlow to only use the first GPU
@@ -21,8 +25,22 @@ if gpus:
 (X_train, y_train), (X_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
 # preprocess dataset
-X_train, X_test = X_train.astype(
-    'float32')/255.0, X_test.astype('float32')/255.0
+X_train, X_test = X_train.astype('float32'), X_test.astype('float32')
+datagen = ImageDataGenerator(
+    featurewise_center=True,
+    featurewise_std_normalization=True,
+    rotation_range=90,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    #  brightness_range=(0.3, 0.8),
+    #  shear_range=40,
+    zoom_range=0.5,
+    #  channel_shift_range=90,
+    horizontal_flip=True,
+    #  vertical_flip=True,
+    validation_split=0.2
+)
+datagen.fit(X_train)
 
 # one-hot encode y labels for use with categorical crossentropy
 
@@ -31,11 +49,12 @@ y_train_encoded = one_hot_encoder.fit_transform(y_train)
 
 # build model
 model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, kernel_size=(3, 3), activation='relu'),
+    tf.keras.layers.Conv2D(32, kernel_size=(3, 3), activation='tanh'),
     tf.keras.layers.MaxPool2D(pool_size=(3, 3)),
-    tf.keras.layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
+    tf.keras.layers.Conv2D(64, kernel_size=(3, 3), activation='tanh'),
     tf.keras.layers.MaxPool2D(pool_size=(2, 2)),
     tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(256, activation='relu'),
     tf.keras.layers.Dense(10, activation='softmax')
 ])
 
@@ -44,8 +63,8 @@ model.compile(optimizer='adam', loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 # train model
-history_callback = model.fit(
-    X_train, y_train_encoded, batch_size=128, epochs=50, validation_split=0.2)
+history_callback = model.fit(datagen.flow(X_train, y_train_encoded, batch_size=128, subset='training'),
+                             validation_data=datagen.flow(X_train, y_train_encoded, batch_size=8, subset='validation'), epochs=100)
 loss_history, accuracy_history = history_callback.history[
     "loss"], history_callback.history["accuracy"]
 
